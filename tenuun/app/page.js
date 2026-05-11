@@ -15,6 +15,7 @@ function MglFlag() {
 function getItemDisplay(item) {
   if (typeof item !== "string") return { name: "Item", image: null };
   if (item.startsWith("http")) return { name: "Item", image: item };
+  // handles cases like "mousehttps://..." where text is glued to a URL
   const urlIndex = item.indexOf("http");
   if (urlIndex > 0) {
     return { name: item.slice(0, urlIndex), image: item.slice(urlIndex) };
@@ -115,7 +116,18 @@ function StudentCard({ student, onDelete }) {
 }
 
 export default function Page() {
+  const [search, setSearch] = useState("");
   const [list, setList] = useState(data);
+
+  const filtered = list.filter((s) => {
+    const q = search.toLowerCase();
+    return (
+      s.firstname.toLowerCase().includes(q) ||
+      s.lastname.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q) ||
+      s.job.toLowerCase().includes(q)
+    );
+  });
 
   const handleDelete = (id, email) => {
     setList((prev) => prev.filter((s) => !(s.id === id && s.email === email)));
@@ -128,11 +140,27 @@ export default function Page() {
           Student List
         </h1>
 
-        {list.length === 0 ? (
+        <div className="flex justify-center mb-8">
+          <input
+            type="text"
+            placeholder="Search student..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full max-w-xl border-2 border-blue-400 focus:border-blue-600 outline-none rounded-lg px-4 py-2.5 text-gray-700 bg-white shadow-sm text-sm transition-colors"
+          />
+        </div>
+
+        <p className="text-center text-gray-400 text-sm mb-6">
+          Showing <span className="font-semibold text-gray-600">{filtered.length}</span> of{" "}
+          <span className="font-semibold text-gray-600">{list.length}</span> people
+        </p>
+
+     
+        {filtered.length === 0 ? (
           <div className="text-center text-gray-400 mt-20 text-lg">No results found.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-            {list.map((student, index) => (
+            {filtered.map((student, index) => (
               <StudentCard
                 key={`${student.id}-${student.email}-${index}`}
                 student={student}
